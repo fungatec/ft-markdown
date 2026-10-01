@@ -94,7 +94,7 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
 - FR-010: MarkItDown 0.1.8 no permite elegir el idioma del audio (transcribe siempre en inglés). El audio se atiende en `adapters/audio_transcriber.py`; YouTube sí admite idiomas por parámetro.
 - Historial (FR-011): guarda ruta, título, estado y fecha; no el contenido (P4).
 - Cancelación (FR-005): MarkItDown no se puede interrumpir a mitad de un archivo. Los trabajos pendientes se cancelan al instante; el que está convirtiendo termina y su resultado se descarta (queda CANCELLED). La cola vive en `app/conversion_queue.py` con `QThreadPool` (máx. 2 simultáneos).
-- Conectividad (FR-008): `app/connectivity.py` consulta cada 5 s en un hilo aparte (sonda TCP de 3 s a resolutores DNS públicos, sin enviar datos) y avisa solo cuando el estado cambia. La conexión con la interfaz queda para T021.
+- Conectividad (FR-008, P11, NFR-004): `app/connectivity.py` nace detenido y no abre ningún socket hasta `start()`. Activo, comprueba de inmediato y luego cada 5 s en un hilo aparte (sonda TCP de 3 s a 1.1.1.1 y 8.8.8.8, sin enviar datos) y avisa solo cuando el estado cambia. `stop()` devuelve `is_online` a `None` y descarta la consulta en curso. **T021 debe llamar `start()` al mostrar el panel de URL/YouTube/audio y `stop()` al ocultarlo.** T022 documentará esas dos direcciones en el panel de privacidad.
 - `requires-python` pasa a `>=3.12,<3.14`, coherente con el entorno de compilación.
 
 ## Fuera de esta lista (fase 2 del producto)
