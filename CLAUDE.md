@@ -19,6 +19,25 @@ App de escritorio para Windows que convierte documentos a Markdown usando MarkIt
 5. Actualiza el progreso en `04-tareas.md`. Si algo contradice la especificación o el plan, corrige el documento y anótalo en su registro de cambios.
 6. Un commit por tarea: `Txxx: resumen en español`. Al final, el trailer de coautoría que indique la herramienta.
 
+## Protocolo por tarea (obligatorio)
+
+Al recibir una tarea Txxx, antes de escribir código:
+
+1. Lee la fila de la tarea en `04-tareas.md` y las secciones del plan y la especificación que cita.
+2. Resume en un máximo de 5 líneas cómo la resolverás y **enumera cada decisión que el SDD no cubre** (servidores, bibliotecas, valores, licencias). Espera el visto bueno antes de implementar. Si ya tienes autorización expresa para seguir, anota igualmente esas decisiones en el commit y en `04-tareas.md`.
+3. Contrasta cada decisión con la constitución (P1–P12), no solo con la tarea. Si una elección roza un principio (p. ej. conexiones de red sin motivo visible, P11), detente y plántealo.
+4. Sigue el flujo de abajo. Al terminar, informa solo lo que verificaste: pega el resultado real de `pytest`, `ruff` y `git log --oneline -3`, sin resumir lo que no ejecutaste.
+
+Higiene del repositorio:
+
+- Añade archivos al commit **por nombre**, nunca con `git add .` ni `git add -A`. Deja fuera cambios ajenos a la tarea (p. ej. `tests/fixtures/markitdown/test_mskanji.csv`, que Windows modifica por fines de línea).
+- El registro del hash en `04-tareas.md` va en un commit de documentación aparte.
+- Nunca uses `--force`, `--no-verify` ni `git reset --hard` sin permiso expreso.
+- Antes de cualquier `push`, comprueba que no entra nada de `build/`, `dist/`, instaladores, `.env` ni datos personales.
+- Una sesión por tarea; el contexto vive en este archivo y en `docs/sdd/`, no en la conversación.
+
+Revisión independiente (T029): quien revise no debe ser la sesión que escribió el código. Verifica contra los criterios de éxito §9 de la especificación, no contra la intención del autor.
+
 ## Reglas que no se rompen (las vigila `tests/unit/test_architecture.py`)
 
 - `core` no importa nada del proyecto ni de terceros fuera de la biblioteca estándar. `adapters` importa `core`. `app` importa `core` y solo `PySide6.QtCore`. `ui` importa `app` y `core`. Solo `__main__.py` conecta las capas.
