@@ -89,3 +89,10 @@ def test_fallo_de_red_envuelto_por_markitdown_se_detecta_como_red():
         object(), (RequestsConnectionError, RequestsConnectionError("x"), None)
     )
     assert classify(FileConversionException(attempts=[intento])) is ErrorKind.NETWORK
+
+
+def test_dependencia_faltante_envuelta_no_se_confunde_con_archivo_danado():
+    intento = FailedConversionAttempt(
+        object(), (MissingDependencyException, MissingDependencyException("x"), None)
+    )
+    assert classify(FileConversionException(attempts=[intento])) is ErrorKind.MISSING_DEPENDENCY

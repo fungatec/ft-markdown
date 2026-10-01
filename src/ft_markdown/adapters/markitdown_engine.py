@@ -1,7 +1,8 @@
 """Adaptador de MarkItDown: unico archivo que importa la biblioteca (Constitucion P1).
 
 Traduce las excepciones de MarkItDown a `ConversionError` con un `ErrorKind`, de modo que el
-resto de la aplicacion no depende de la biblioteca.
+resto de la aplicacion no depende de la biblioteca. Tambien aplica las preferencias de idioma
+(`ConversionOptions`): MarkItDown usa ingles por defecto y la app trabaja en espanol.
 """
 
 from __future__ import annotations
@@ -16,8 +17,10 @@ from markitdown import (
 )
 from requests.exceptions import RequestException
 
+from ..core.capabilities import find_for_path
 from ..core.errors import ConversionError, ErrorKind
-from ..core.models import ConversionResult
+from ..core.models import ConversionOptions, ConversionResult
+from . import audio_transcriber
 
 _NETWORK_ERRORS = (RequestException, ConnectionError, TimeoutError)
 
@@ -33,20 +36,26 @@ def classify(exc: BaseException) -> ErrorKind:
     if isinstance(exc, MissingDependencyException):
         return ErrorKind.MISSING_DEPENDENCY
     if isinstance(exc, FileConversionException):
-        # MarkItDown envuelve el fallo real: si fue de red, se informa como tal.
-        for intento in exc.attempts or []:
-            if intento.exc_info and isinstance(intento.exc_info[1], _NETWORK_ERRORS):
-                return ErrorKind.NETWORK
+        # MarkItDown envuelve el fallo real en `attempts`: se mira la causa verdadera.
+        causas = [a.exc_info[1] for a in exc.attempts or [] if a.exc_info]
+        if any(isinstance(c, _NETWORK_ERRORS) for c in causas):
+            return ErrorKind.NETWORK
+        if any(isinstance(c, MissingDependencyException) for c in causas):
+            return ErrorKind.MISSING_DEPENDENCY
         return ErrorKind.CORRUPT_FILE
     return ErrorKind.UNKNOWN
 
 
 class MarkItDownEngine:
-    def __init__(self) -> None:
+    def __init__(self, options: ConversionOptions | None = None) -> None:
+        self._options = options or ConversionOptions()
         # Sin plugins: entry_points no es fiable dentro de un .exe (plan, P5).
         self._markitdown = MarkItDown(enable_plugins=False)
 
     def convert_file(self, path: Path) -> ConversionResult:
+        capacidad = find_for_path(path)
+        if capacidad is not None and capacidad.id.startswith("audio"):
+            return self._convert_audio(path)
         try:
             result = self._markitdown.convert_local(path)
         except Exception as exc:
@@ -56,3 +65,21 @@ class MarkItDownEngine:
         if not result.markdown.strip():
             raise ConversionError("Resultado vacio", kind=ErrorKind.EMPTY_RESULT, source=path)
         return ConversionResult(source=path, markdown=result.markdown, title=result.title)
+
+    def convert_url(self, url: str) -> ConversionResult:
+        try:
+            result = self._markitdown.convert_url(
+                url, youtube_transcript_languages=list(self._options.youtube_languages)
+            )
+        except Exception as exc:
+            raise ConversionError(
+                str(exc) or type(exc).__name__, kind=classify(exc), source=url
+            ) from exc
+        if not result.markdown.strip():
+            raise ConversionError("Resultado vacio", kind=ErrorKind.EMPTY_RESULT, source=url)
+        return ConversionResult(source=url, markdown=result.markdown, title=result.title)
+
+    def _convert_audio(self, path: Path) -> ConversionResult:
+        texto = audio_transcriber.transcribe(path, self._options.audio_language)
+        markdown = f"### Transcripción de audio\n\n{texto}\n"
+        return ConversionResult(source=path, markdown=markdown, title=path.stem)

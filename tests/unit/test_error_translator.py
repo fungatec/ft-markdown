@@ -56,3 +56,22 @@ def test_un_conversion_error_sin_tipo_es_desconocido():
 def test_el_texto_completo_junta_titulo_causa_y_sugerencia():
     mensaje = traductor.translate(ConversionError("x", kind=ErrorKind.NETWORK))
     assert mensaje.title in mensaje.text and mensaje.suggestion in mensaje.text
+
+
+def test_audio_sin_voz_tiene_mensaje_propio():
+    mensaje = traductor.translate(
+        ConversionError("", kind=ErrorKind.EMPTY_RESULT, source=Path("nota.mp3"))
+    )
+    assert mensaje.title == "Audio sin voz reconocible"
+
+
+def test_empty_result_de_una_url_usa_mensaje_generico():
+    mensaje = traductor.translate(
+        ConversionError("", kind=ErrorKind.EMPTY_RESULT, source="https://ejemplo.org")
+    )
+    assert "sin contenido" in mensaje.title.lower()
+
+
+def test_componente_faltante_explica_la_descarga_de_ffmpeg():
+    mensaje = traductor.translate(ConversionError("", kind=ErrorKind.MISSING_COMPONENT))
+    assert "ffmpeg" in mensaje.cause

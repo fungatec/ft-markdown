@@ -11,11 +11,22 @@ from .errors import ConversionError
 
 @dataclass(frozen=True)
 class ConversionResult:
-    """Markdown obtenido de un documento."""
+    """Markdown obtenido de un documento (`source` es la ruta del archivo o la URL)."""
 
-    source: Path
+    source: Path | str
     markdown: str
     title: str | None = None
+
+
+@dataclass(frozen=True)
+class ConversionOptions:
+    """Preferencias de idioma que se pasan al motor (FR-009, FR-010).
+
+    MarkItDown usa ingles por defecto en el audio y en YouTube; la app lo cambia a espanol.
+    """
+
+    audio_language: str = "es-MX"
+    youtube_languages: tuple[str, ...] = ("es", "en")  # en orden de prioridad
 
 
 class JobState(Enum):

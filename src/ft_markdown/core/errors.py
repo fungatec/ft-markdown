@@ -18,6 +18,7 @@ class ErrorKind(Enum):
     UNSUPPORTED_FORMAT = "unsupported_format"
     CORRUPT_FILE = "corrupt_file"
     MISSING_DEPENDENCY = "missing_dependency"
+    MISSING_COMPONENT = "missing_component"
     NETWORK = "network"
     EMPTY_RESULT = "empty_result"
     UNKNOWN = "unknown"
@@ -35,7 +36,7 @@ class ConversionError(Exception):
         message: str = "",
         *,
         kind: ErrorKind = ErrorKind.UNKNOWN,
-        source: Path | None = None,
+        source: Path | str | None = None,
     ) -> None:
         super().__init__(message)
         self.kind = kind
@@ -57,6 +58,7 @@ class UserMessage:
 
 
 _IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png"})
+_AUDIO_SUFFIXES = frozenset({".wav", ".mp3", ".m4a"})
 
 _MESSAGES: dict[ErrorKind, tuple[str, str, str]] = {
     ErrorKind.FILE_NOT_FOUND: (
@@ -78,6 +80,11 @@ _MESSAGES: dict[ErrorKind, tuple[str, str, str]] = {
         "Falta un componente",
         "Esta conversión necesita una pieza que no se instaló correctamente.",
         "Reinstala FT Markdown; si el problema continúa, repórtalo con el detalle técnico.",
+    ),
+    ErrorKind.MISSING_COMPONENT: (
+        "Falta un componente opcional",
+        "Convertir audio MP3 o M4A necesita ffmpeg, que se descarga solo cuando hace falta.",
+        "Acepta la descarga del componente cuando FT Markdown te la ofrezca y vuelve a intentarlo.",
     ),
     ErrorKind.NETWORK: (
         "Sin conexión a internet",
@@ -109,6 +116,12 @@ _IMAGE_WITHOUT_TEXT = (
     "La descripción y el reconocimiento de texto de imágenes llegarán en una versión futura.",
 )
 
+_AUDIO_WITHOUT_SPEECH = (
+    "Audio sin voz reconocible",
+    "El servicio de transcripción no detectó palabras en la grabación.",
+    "Comprueba que la grabación tenga voz clara y que el idioma elegido sea el correcto.",
+)
+
 
 class ErrorTranslator:
     """Convierte excepciones tecnicas en mensajes en espanol (sin estado)."""
@@ -124,10 +137,12 @@ class ErrorTranslator:
 
     @staticmethod
     def _select(error: ConversionError) -> tuple[str, str, str]:
-        if error.kind is ErrorKind.EMPTY_RESULT and error.source is not None:
+        if error.kind is ErrorKind.EMPTY_RESULT and isinstance(error.source, Path):
             suffix = error.source.suffix.lower()
             if suffix == ".pdf":
                 return _PDF_WITHOUT_TEXT
             if suffix in _IMAGE_SUFFIXES:
                 return _IMAGE_WITHOUT_TEXT
+            if suffix in _AUDIO_SUFFIXES:
+                return _AUDIO_WITHOUT_SPEECH
         return _MESSAGES[error.kind]

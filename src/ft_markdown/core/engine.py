@@ -17,3 +17,7 @@ class ConversionEngine(Protocol):
     def convert_file(self, path: Path) -> ConversionResult:
         """Convierte un archivo local. Lanza ConversionError si no es posible."""
         ...
+
+    def convert_url(self, url: str) -> ConversionResult:
+        """Convierte una pagina web o un video de YouTube. Requiere internet."""
+        ...
