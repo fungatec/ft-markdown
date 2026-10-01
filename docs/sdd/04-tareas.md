@@ -86,11 +86,13 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
 | T008 | Hecho: instalador 95,7 MB; ◆ Punto de control 1 superado | — |
 | T009, T010 | Hecho | `f7845dc` |
 | T011 | Hecho | `92e63c1` |
-| T012 | Hecho (pendiente de commit) | — |
+| T012 | Hecho | `ef04744` |
+| T013 | Hecho | `125f8d0` |
 
 **Correcciones al plan descubiertas al implementar**
 - FR-010: MarkItDown 0.1.8 no permite elegir el idioma del audio (transcribe siempre en inglés). El audio se atiende en `adapters/audio_transcriber.py`; YouTube sí admite idiomas por parámetro.
 - Historial (FR-011): guarda ruta, título, estado y fecha; no el contenido (P4).
+- Cancelación (FR-005): MarkItDown no se puede interrumpir a mitad de un archivo. Los trabajos pendientes se cancelan al instante; el que está convirtiendo termina y su resultado se descarta (queda CANCELLED). La cola vive en `app/conversion_queue.py` con `QThreadPool` (máx. 2 simultáneos).
 - `requires-python` pasa a `>=3.12,<3.14`, coherente con el entorno de compilación.
 
 ## Fuera de esta lista (fase 2 del producto)
