@@ -24,6 +24,7 @@ dependencies = [
   # Motor de conversion: version exacta (Constitucion P1). Solo adapters/markitdown_engine.py lo importa.
   "markitdown[pdf,docx,pptx,xlsx,xls,outlook,audio-transcription,youtube-transcription]==0.1.8",
   "PySide6-Essentials>=6.8,<7",
+  "requests>=2.28",  # el adaptador la importa para reconocer errores de red
   "platformdirs>=4",
   "packaging>=24",
 ]
