@@ -9,7 +9,7 @@ description = "FT Markdown: convertidor de documentos a Markdown de FungaTec"
 readme = "README.md"
 # 3.12 es la version objetivo. El limite superior (<3.14) existe porque Magika 0.6.x exige
 # onnxruntime<=1.20.1 en Windows, y esa version no publica paquetes para Python 3.14.
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.12,<3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "FungaTec" }]

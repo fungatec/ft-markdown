@@ -1,6 +1,6 @@
 # Fase 3 — Desglose de tareas · FT Markdown v1.0
 
-**Versión:** 0.1 · **Fecha:** 2026-10-01 · **Estado:** en revisión · **Implementa:** Plan v0.2
+**Versión:** 0.2 · **Fecha:** 2026-10-01 · **Estado:** en revisión · **Implementa:** Plan v0.2
 
 ## ¿Qué es este paso?
 
@@ -74,6 +74,24 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
 | T029 | Verificación final contra los criterios de éxito §9 de la especificación, hecha por un revisor independiente que no escribió el código | P7 | Claude (revisor aparte) + Tú | Informe sin fallos críticos |
 
 ◆ **Punto de control 4.** Publicación de FT Markdown **v1.0.0**.
+
+## Progreso
+
+| Tarea | Estado | Commit |
+|---|---|---|
+| T001, T002 | Hecho | — |
+| T003 | Pospuesto (antes de T016) | — |
+| T004, T005 | Hecho | `a9d5927` |
+| T006, T007 | Hecho | `e7c836f` |
+| T008 | Hecho: instalador 95,7 MB; ◆ Punto de control 1 superado | — |
+| T009, T010 | Hecho | `f7845dc` |
+| T011 | Hecho | `92e63c1` |
+| T012 | Hecho (pendiente de commit) | — |
+
+**Correcciones al plan descubiertas al implementar**
+- FR-010: MarkItDown 0.1.8 no permite elegir el idioma del audio (transcribe siempre en inglés). El audio se atiende en `adapters/audio_transcriber.py`; YouTube sí admite idiomas por parámetro.
+- Historial (FR-011): guarda ruta, título, estado y fecha; no el contenido (P4).
+- `requires-python` pasa a `>=3.12,<3.14`, coherente con el entorno de compilación.
 
 ## Fuera de esta lista (fase 2 del producto)
 
