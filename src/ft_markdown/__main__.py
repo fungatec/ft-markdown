@@ -52,13 +52,19 @@ def main(argv: list[str] | None = None) -> int:
 
     from PySide6.QtWidgets import QApplication
 
+    from .adapters.app_paths import components_dir
+    from .adapters.ffmpeg_provider import FFMPEG, UrllibDownloader
     from .adapters.markitdown_engine import MarkItDownEngine
+    from .app.components import ComponentManager
     from .ui.main_window import MainWindow
 
     app = QApplication(sys.argv[:1] + args)
     app.setApplicationName(APP_NAME)
     app.setOrganizationName(ORGANIZATION)
-    window = MainWindow(MarkItDownEngine())
+    # La descarga con confirmacion llega con la interfaz (T021); aqui solo se localiza el ffmpeg
+    # ya instalado.
+    componentes = ComponentManager(components_dir(), UrllibDownloader())
+    window = MainWindow(MarkItDownEngine(ffmpeg_locator=lambda: componentes.executable(FFMPEG)))
     window.show()
     return app.exec()
 

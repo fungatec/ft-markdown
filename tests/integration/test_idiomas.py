@@ -85,6 +85,42 @@ def test_mp3_sin_ffmpeg_pide_el_componente(tmp_path, monkeypatch):
     assert info.value.kind is ErrorKind.MISSING_COMPONENT
 
 
+def test_pydub_encuentra_ffprobe_junto_al_ffmpeg_descargado(tmp_path, monkeypatch):
+    # pydub busca ffprobe solo en el PATH: la carpeta del ffmpeg descargado debe estar en el.
+    import os
+
+    import pydub
+
+    carpeta = tmp_path / "bin"
+    vista = {}
+
+    def decodificar(*args, **kwargs):
+        vista["path"] = os.environ["PATH"]
+        raise RuntimeError("detenido")
+
+    monkeypatch.setenv("PATH", "C:/otra")
+    monkeypatch.setattr(pydub.AudioSegment, "from_file", decodificar)
+    with pytest.raises(RuntimeError):
+        audio_transcriber._to_wav(tmp_path / "x.mp3", str(carpeta / "ffmpeg.exe"))
+    assert vista["path"].split(os.pathsep)[0] == str(carpeta)
+
+
+def test_el_motor_usa_el_ffmpeg_que_le_da_el_localizador(tmp_path, monkeypatch):
+    recibido = {}
+
+    def falso(path, language, *, ffmpeg=None):
+        recibido["ffmpeg"] = ffmpeg
+        return "hola"
+
+    monkeypatch.setattr(audio_transcriber, "transcribe", falso)
+    mp3 = tmp_path / "nota.mp3"
+    mp3.write_bytes(b"ID3")
+    MarkItDownEngine(ffmpeg_locator=lambda: tmp_path / "ffmpeg.exe").convert_file(mp3)
+    assert recibido["ffmpeg"] == str(tmp_path / "ffmpeg.exe")
+    MarkItDownEngine().convert_file(mp3)
+    assert recibido["ffmpeg"] is None
+
+
 def test_las_urls_piden_subtitulos_primero_en_espanol(monkeypatch):
     recibido = {}
 

@@ -7,6 +7,7 @@ resto de la aplicacion no depende de la biblioteca. Tambien aplica las preferenc
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from markitdown import (
@@ -47,8 +48,15 @@ def classify(exc: BaseException) -> ErrorKind:
 
 
 class MarkItDownEngine:
-    def __init__(self, options: ConversionOptions | None = None) -> None:
+    def __init__(
+        self,
+        options: ConversionOptions | None = None,
+        *,
+        ffmpeg_locator: Callable[[], Path | str | None] | None = None,
+    ) -> None:
         self._options = options or ConversionOptions()
+        # Se consulta en cada conversion: el componente puede descargarse con la app abierta.
+        self._ffmpeg_locator = ffmpeg_locator
         # Sin plugins: entry_points no es fiable dentro de un .exe (plan, P5).
         self._markitdown = MarkItDown(enable_plugins=False)
 
@@ -80,6 +88,9 @@ class MarkItDownEngine:
         return ConversionResult(source=url, markdown=result.markdown, title=result.title)
 
     def _convert_audio(self, path: Path) -> ConversionResult:
-        texto = audio_transcriber.transcribe(path, self._options.audio_language)
+        ffmpeg = self._ffmpeg_locator() if self._ffmpeg_locator else None
+        texto = audio_transcriber.transcribe(
+            path, self._options.audio_language, ffmpeg=str(ffmpeg) if ffmpeg else None
+        )
         markdown = f"### Transcripción de audio\n\n{texto}\n"
         return ConversionResult(source=path, markdown=markdown, title=path.stem)

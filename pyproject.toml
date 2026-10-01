@@ -52,7 +52,8 @@ packages = ["src/ft_markdown"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra -m \"not network\""
+markers = ["network: usa internet (descarga real de ffmpeg); se ejecuta con -m network"]
 
 [tool.ruff]
 line-length = 100

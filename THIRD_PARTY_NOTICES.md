@@ -44,3 +44,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE
 ```
+
+## FFmpeg (componente descargable, no incluido en el instalador)
+
+FT Markdown descarga FFmpeg bajo demanda, con confirmación, la primera vez que se convierte un MP3 o M4A. No se distribuye dentro del instalador.
+
+- Compilación: BtbN/FFmpeg-Builds, variante `win64-lgpl-shared`, versión n8.1.2-50-g1a748fe2cd (build del 2026-08-31). Sin `--enable-gpl` ni `--enable-nonfree`.
+- Licencia: LGPL v3 (`--enable-version3`). El texto completo se instala junto al componente (`LICENSE.txt`).
+- Código fuente: https://ffmpeg.org/download.html y https://github.com/BtbN/FFmpeg-Builds
+- FT Markdown ejecuta FFmpeg como programa aparte; las bibliotecas quedan como archivos DLL reemplazables.
+

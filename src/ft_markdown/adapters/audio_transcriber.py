@@ -60,9 +60,15 @@ def _to_wav(path: Path, ffmpeg: str | None) -> io.BytesIO:
         raise ConversionError(
             "ffmpeg no esta disponible", kind=ErrorKind.MISSING_COMPONENT, source=path
         )
+    import os
+
     import pydub
 
     pydub.AudioSegment.converter = ejecutable
+    # pydub localiza ffprobe solo en el PATH; el componente lo trae junto a ffmpeg.exe.
+    carpeta = str(Path(ejecutable).parent)
+    if carpeta not in os.environ.get("PATH", "").split(os.pathsep):
+        os.environ["PATH"] = carpeta + os.pathsep + os.environ.get("PATH", "")
     salida = io.BytesIO()
     pydub.AudioSegment.from_file(path).export(salida, format="wav")
     salida.seek(0)
