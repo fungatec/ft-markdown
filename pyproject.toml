@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ft-markdown"
+dynamic = ["version"]
+description = "FT Markdown: convertidor de documentos a Markdown de FungaTec"
+readme = "README.md"
+# 3.12 es la version objetivo. El limite superior (<3.14) existe porque Magika 0.6.x exige
+# onnxruntime<=1.20.1 en Windows, y esa version no publica paquetes para Python 3.14.
+requires-python = ">=3.10,<3.14"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "FungaTec" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Win32 (MS Windows)",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3.12",
+  "Natural Language :: Spanish",
+]
+dependencies = [
+  # Motor de conversion: version exacta (Constitucion P1). Solo adapters/markitdown_engine.py lo importa.
+  "markitdown[pdf,docx,pptx,xlsx,xls,outlook,audio-transcription,youtube-transcription]==0.1.8",
+  "PySide6-Essentials>=6.8,<7",
+  "platformdirs>=4",
+  "packaging>=24",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-qt>=4.4",
+  "ruff>=0.6",
+  "pyinstaller>=6.10",
+]
+
+[project.gui-scripts]
+ft-markdown = "ft_markdown.__main__:main"
+
+[project.urls]
+Source = "https://github.com/fungatec/ft-markdown"
+Issues = "https://github.com/fungatec/ft-markdown/issues"
+
+[tool.hatch.version]
+path = "src/ft_markdown/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ft_markdown"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

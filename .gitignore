@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Compilacion y empaquetado (los instaladores se publican en GitHub Releases, no en el repositorio)
+/build/
+/dist/
+/Output/
+*.exe
+*.spec.bak
+
+# Secretos y datos locales
+.env
+*.sqlite
+settings.local.json
+
+# Editores y sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
