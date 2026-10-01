@@ -9,6 +9,7 @@ __pycache__/
 # Compilacion y empaquetado (los instaladores se publican en GitHub Releases, no en el repositorio)
 /build/
 /dist/
+/dist-installer/
 /Output/
 *.exe
 *.spec.bak

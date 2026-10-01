@@ -15,3 +15,9 @@ def test_nombre_de_la_aplicacion():
 def test_version_por_linea_de_comandos(capsys):
     assert entrada.main(["--version"]) == 0
     assert capsys.readouterr().out.strip() == f"{APP_NAME} {__version__}"
+
+
+def test_autoprueba_escribe_resultado(tmp_path):
+    salida = tmp_path / "resultado.txt"
+    assert entrada.main(["--selftest", str(salida)]) == 0
+    assert salida.read_text(encoding="utf-8").startswith("OK ")
