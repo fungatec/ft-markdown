@@ -90,6 +90,7 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
 | T013 | Hecho | `125f8d0` |
 | T014 | Hecho | `2e57df8`, `19382dd` |
 | T015 | Hecho | `0898fc5` |
+| Ajuste T013/T014 (cierre ordenado) | Hecho | `ed8c0c1` |
 
 **Correcciones al plan descubiertas al implementar**
 - FR-010: MarkItDown 0.1.8 no permite elegir el idioma del audio (transcribe siempre en inglés). El audio se atiende en `adapters/audio_transcriber.py`; YouTube sí admite idiomas por parámetro.
