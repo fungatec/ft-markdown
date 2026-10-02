@@ -80,7 +80,7 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
 | Tarea | Estado | Commit |
 |---|---|---|
 | T001, T002 | Hecho | — |
-| T003 | Pospuesto (antes de T016) | — |
+| T003 | Hecho: repositorio público `fungatec/ft-markdown` creado | — |
 | T004, T005 | Hecho | `a9d5927` |
 | T006, T007 | Hecho | `e7c836f` |
 | T008 | Hecho: instalador 95,7 MB; ◆ Punto de control 1 superado | — |
