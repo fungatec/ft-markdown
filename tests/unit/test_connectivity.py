@@ -48,8 +48,8 @@ def test_el_intervalo_por_defecto_detecta_cambios_en_menos_de_10_s():
     assert DEFAULT_INTERVAL_MS / 1000 + PROBE_TIMEOUT_S < 10
 
 
-def test_el_estado_inicial_es_desconocido_hasta_la_primera_consulta(qtbot):
-    monitor = ConnectivityMonitor(FakeProbe(True), interval_ms=50)
+def test_el_estado_inicial_es_desconocido_hasta_la_primera_consulta(qtbot, monitor_factory):
+    monitor = monitor_factory(FakeProbe(True), interval_ms=50)
     assert monitor.is_online is None
     with qtbot.waitSignal(monitor.status_changed, timeout=2000) as blocker:
         monitor.start()
@@ -58,9 +58,9 @@ def test_el_estado_inicial_es_desconocido_hasta_la_primera_consulta(qtbot):
     monitor.stop()
 
 
-def test_detecta_la_perdida_y_la_vuelta_de_la_conexion(qtbot):
+def test_detecta_la_perdida_y_la_vuelta_de_la_conexion(qtbot, monitor_factory):
     probe = FakeProbe(True)
-    monitor = ConnectivityMonitor(probe, interval_ms=50)
+    monitor = monitor_factory(probe, interval_ms=50)
     with qtbot.waitSignal(monitor.status_changed, timeout=2000):
         monitor.start()
     with qtbot.waitSignal(monitor.status_changed, timeout=2000) as blocker:
@@ -73,9 +73,9 @@ def test_detecta_la_perdida_y_la_vuelta_de_la_conexion(qtbot):
     monitor.stop()
 
 
-def test_solo_avisa_cuando_el_estado_cambia(qtbot):
+def test_solo_avisa_cuando_el_estado_cambia(qtbot, monitor_factory):
     probe = FakeProbe(False)
-    monitor = ConnectivityMonitor(probe, interval_ms=20)
+    monitor = monitor_factory(probe, interval_ms=20)
     seen: list[bool] = []
     monitor.status_changed.connect(seen.append)
     monitor.start()
@@ -84,9 +84,9 @@ def test_solo_avisa_cuando_el_estado_cambia(qtbot):
     assert seen == [False]
 
 
-def test_la_consulta_corre_fuera_del_hilo_de_la_interfaz_y_sin_solaparse(qtbot):
+def test_la_consulta_corre_fuera_del_hilo_de_la_interfaz_y_sin_solaparse(qtbot, monitor_factory):
     probe = FakeProbe(True, delay=0.1)
-    monitor = ConnectivityMonitor(probe, interval_ms=10)
+    monitor = monitor_factory(probe, interval_ms=10)
     monitor.start()
     qtbot.waitUntil(lambda: probe.calls >= 3, timeout=3000)
     monitor.stop()
@@ -94,9 +94,9 @@ def test_la_consulta_corre_fuera_del_hilo_de_la_interfaz_y_sin_solaparse(qtbot):
     assert probe.max_active == 1
 
 
-def test_check_now_consulta_de_inmediato_mientras_esta_activo(qtbot):
+def test_check_now_consulta_de_inmediato_mientras_esta_activo(qtbot, monitor_factory):
     probe = FakeProbe(True)
-    monitor = ConnectivityMonitor(probe, interval_ms=60_000)
+    monitor = monitor_factory(probe, interval_ms=60_000)
     with qtbot.waitSignal(monitor.status_changed, timeout=2000):
         monitor.start()
     assert probe.calls == 1
@@ -111,9 +111,9 @@ def test_check_now_consulta_de_inmediato_mientras_esta_activo(qtbot):
     monitor.stop()
 
 
-def test_detenido_no_llama_a_la_sonda(qtbot):
+def test_detenido_no_llama_a_la_sonda(qtbot, monitor_factory):
     probe = FakeProbe(True)
-    monitor = ConnectivityMonitor(probe, interval_ms=20)
+    monitor = monitor_factory(probe, interval_ms=20)
     assert not monitor.is_active
     monitor.check_now()  # sin start(): no debe abrir ningun socket
     qtbot.wait(150)
@@ -121,9 +121,9 @@ def test_detenido_no_llama_a_la_sonda(qtbot):
     assert monitor.is_online is None
 
 
-def test_start_y_stop_repetidos_son_seguros(qtbot):
+def test_start_y_stop_repetidos_son_seguros(qtbot, monitor_factory):
     probe = FakeProbe(True)
-    monitor = ConnectivityMonitor(probe, interval_ms=60_000)
+    monitor = monitor_factory(probe, interval_ms=60_000)
     seen: list[bool] = []
     monitor.status_changed.connect(seen.append)
     monitor.start()
@@ -141,9 +141,9 @@ def test_start_y_stop_repetidos_son_seguros(qtbot):
     monitor.stop()
 
 
-def test_tras_stop_no_llegan_senales_atrasadas(qtbot):
+def test_tras_stop_no_llegan_senales_atrasadas(qtbot, monitor_factory):
     probe = FakeProbe(True, delay=0.2)
-    monitor = ConnectivityMonitor(probe, interval_ms=60_000)
+    monitor = monitor_factory(probe, interval_ms=60_000)
     seen: list[bool] = []
     monitor.status_changed.connect(seen.append)
     monitor.start()
@@ -155,9 +155,9 @@ def test_tras_stop_no_llegan_senales_atrasadas(qtbot):
     assert monitor.is_online is None
 
 
-def test_una_consulta_vieja_no_bloquea_la_de_un_nuevo_start(qtbot):
+def test_una_consulta_vieja_no_bloquea_la_de_un_nuevo_start(qtbot, monitor_factory):
     probe = FakeProbe(True, delay=0.3)
-    monitor = ConnectivityMonitor(probe, interval_ms=60_000)
+    monitor = monitor_factory(probe, interval_ms=60_000)
     monitor.start()
     qtbot.waitUntil(lambda: probe.active == 1, timeout=2000)
     monitor.stop()
@@ -167,20 +167,20 @@ def test_una_consulta_vieja_no_bloquea_la_de_un_nuevo_start(qtbot):
     monitor.stop()
 
 
-def test_una_sonda_que_falla_cuenta_como_sin_conexion(qtbot):
+def test_una_sonda_que_falla_cuenta_como_sin_conexion(qtbot, monitor_factory):
     def broken() -> bool:
         raise OSError("red caida")
 
-    monitor = ConnectivityMonitor(broken, interval_ms=50)
+    monitor = monitor_factory(broken, interval_ms=50)
     with qtbot.waitSignal(monitor.status_changed, timeout=2000) as blocker:
         monitor.start()
     assert blocker.args == [False]
     monitor.stop()
 
 
-def test_stop_detiene_las_consultas(qtbot):
+def test_stop_detiene_las_consultas(qtbot, monitor_factory):
     probe = FakeProbe(True)
-    monitor = ConnectivityMonitor(probe, interval_ms=20)
+    monitor = monitor_factory(probe, interval_ms=20)
     with qtbot.waitSignal(monitor.status_changed, timeout=2000):
         monitor.start()
     monitor.stop()
@@ -204,3 +204,72 @@ def test_tcp_probe_es_falso_si_ningun_destino_responde():
     port = server.getsockname()[1]
     server.close()  # puerto libre: la conexion se rechaza
     assert tcp_probe(hosts=(("127.0.0.1", port),), timeout=0.5) is False
+
+
+# --- Cierre ordenado (ajuste T014) -------------------------------------------------------------
+
+
+def _hilos_de_sondeo() -> list[threading.Thread]:
+    return [t for t in threading.enumerate() if t.name == "ft-connectivity" and t.is_alive()]
+
+
+def test_shutdown_espera_a_la_sonda_en_curso_y_no_deja_hilos(qtbot, monitor_factory):
+    probe = FakeProbe(True, delay=0.3)
+    monitor = monitor_factory(probe, interval_ms=60_000)
+    seen: list[bool] = []
+    monitor.status_changed.connect(seen.append)
+    monitor.start()
+    qtbot.waitUntil(lambda: probe.active == 1, timeout=2000)
+
+    assert monitor.shutdown(timeout_ms=3000) is True
+    assert probe.active == 0
+    assert _hilos_de_sondeo() == []
+    qtbot.wait(100)
+    assert seen == []  # el resultado de la consulta en curso se descarta
+    assert not monitor.is_active and monitor.is_online is None
+
+
+def test_stop_no_espera_a_la_sonda(qtbot, monitor_factory):
+    probe = FakeProbe(True, delay=0.5)
+    monitor = monitor_factory(probe, interval_ms=60_000)
+    monitor.start()
+    qtbot.waitUntil(lambda: probe.active == 1, timeout=2000)
+    inicio = time.monotonic()
+    monitor.stop()
+    assert time.monotonic() - inicio < 0.25  # la interfaz no se congela al ocultar el panel
+
+
+def test_tras_shutdown_no_se_puede_reactivar(qtbot, monitor_factory):
+    probe = FakeProbe(True)
+    monitor = monitor_factory(probe, interval_ms=20)
+    assert monitor.shutdown() is True
+    assert monitor.shutdown() is True
+    monitor.start()
+    monitor.check_now()
+    qtbot.wait(100)
+    assert probe.calls == 0 and not monitor.is_active
+
+
+def test_una_sonda_tardia_no_toca_un_monitor_destruido(qtbot):
+    from shiboken6 import delete
+
+    errores: list[BaseException] = []
+    anterior = threading.excepthook
+    threading.excepthook = lambda args: errores.append(args.exc_value)
+    try:
+        probe = FakeProbe(True, delay=0.4)
+        monitor = ConnectivityMonitor(probe, interval_ms=60_000)
+        monitor.start()
+        qtbot.waitUntil(lambda: probe.active == 1, timeout=2000)
+        assert monitor.shutdown(timeout_ms=50) is False  # la sonda sigue despues del plazo
+        delete(monitor)  # objeto C++ destruido con la sonda aun corriendo
+        deadline = time.monotonic() + 3
+        while probe.active and time.monotonic() < deadline:
+            time.sleep(0.02)
+        time.sleep(0.1)
+        for hilo in _hilos_de_sondeo():
+            hilo.join(timeout=2)
+    finally:
+        threading.excepthook = anterior
+    assert probe.active == 0
+    assert errores == []
