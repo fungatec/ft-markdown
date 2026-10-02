@@ -22,3 +22,8 @@ def local_data_dir() -> Path:
 def components_dir() -> Path:
     """Donde se instalan los componentes descargados (ffmpeg); se pueden volver a bajar."""
     return local_data_dir() / "components"
+
+
+def updates_dir() -> Path:
+    """Donde se guarda el instalador descargado; se vacia en cada descarga nueva."""
+    return local_data_dir() / "updates"

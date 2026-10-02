@@ -9,10 +9,8 @@ Verificado: `ffmpeg -version` no muestra --enable-gpl ni --enable-nonfree (solo 
 
 from __future__ import annotations
 
-import urllib.error
 import urllib.request
 from pathlib import Path
-from urllib.parse import urlsplit
 
 from ..core.components import (
     CancelCheck,
@@ -21,6 +19,7 @@ from ..core.components import (
     DownloadError,
     ProgressCallback,
 )
+from .network_policy import TIMEOUT, AllowListRedirects, is_allowed_url, new_request
 
 _TAG = "autobuild-2026-08-31-13-27"
 _ARCHIVO = "ffmpeg-n8.1.2-50-g1a748fe2cd-win64-lgpl-shared-8.1.zip"
@@ -37,33 +36,14 @@ FFMPEG = ComponentSpec(
     installed_bytes=144_124_387,
 )
 
-_EXACT_HOSTS = frozenset({"github.com", "githubusercontent.com"})
-_SUFFIX = ".githubusercontent.com"
 _CHUNK = 256 * 1024
-_TIMEOUT = 30
-
-
-def is_allowed_url(url: str) -> bool:
-    """Solo HTTPS, sin credenciales en la URL, hacia github.com o githubusercontent.com."""
-    partes = urlsplit(url)
-    if partes.scheme != "https" or partes.username or partes.password:
-        return False
-    host = (partes.hostname or "").lower()
-    return host in _EXACT_HOSTS or host.endswith(_SUFFIX)
-
-
-class _AllowListRedirects(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        if not is_allowed_url(newurl):
-            raise urllib.error.URLError(f"Redireccion a un origen no permitido: {newurl}")
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 class UrllibDownloader:
     """Descarga por HTTPS con la biblioteca estandar, cancelable y sin dejar parciales."""
 
     def __init__(self) -> None:
-        self._redirect_handler = _AllowListRedirects()
+        self._redirect_handler = AllowListRedirects()
         self._opener = urllib.request.build_opener(self._redirect_handler)
 
     def download(
@@ -71,10 +51,9 @@ class UrllibDownloader:
     ) -> None:
         if not is_allowed_url(url):
             raise DownloadError(f"Origen no permitido: {url}")
-        # Sin cookies ni datos de la persona: solo el nombre de la app.
-        peticion = urllib.request.Request(url, headers={"User-Agent": "FT-Markdown"})
+        peticion = new_request(url)  # sin cookies ni datos de la persona
         try:
-            with self._opener.open(peticion, timeout=_TIMEOUT) as respuesta:
+            with self._opener.open(peticion, timeout=TIMEOUT) as respuesta:
                 total = int(respuesta.headers.get("Content-Length") or 0) or None
                 hecho = 0
                 with destino.open("wb") as salida:
