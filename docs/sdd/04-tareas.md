@@ -91,6 +91,7 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
 | T014 | Hecho | `2e57df8`, `19382dd` |
 | T015 | Hecho | `0898fc5` |
 | Ajuste T013/T014 (cierre ordenado) | Hecho | `ed8c0c1` |
+| T016 | Hecho | `0437f67` |
 
 **Correcciones al plan descubiertas al implementar**
 - FR-010: MarkItDown 0.1.8 no permite elegir el idioma del audio (transcribe siempre en inglés). El audio se atiende en `adapters/audio_transcriber.py`; YouTube sí admite idiomas por parámetro.
@@ -105,6 +106,19 @@ El desglose convierte el plan en tareas pequeñas, ordenadas y verificables. Cad
   - **Seguridad:** el SHA-256 se verifica antes de abrir el zip; se rechazan rutas con `..`, absolutas o con unidad; se extrae solo `ffmpeg.exe`, `ffprobe.exe`, las DLL y `LICENSE.txt` (~144 MB) y se mueve a su sitio de una vez. Descarga cancelable, parciales borrados y espacio libre comprobado (descarga + instalado + 50 MB).
   - **ffprobe:** `pydub` lo busca solo en el PATH y la prueba real lo detectó; el componente lo incluye y `_to_wav` añade su carpeta al PATH.
   - **Alcance:** `__main__` solo conecta la ruta del ejecutable (`ffmpeg_locator` del motor, consultado en cada conversión). El diálogo de confirmación y el texto (nombre, ~71 MB descarga, ~144 MB instalado, origen, LGPL) son de T021. Con `-m network` hay una prueba con descarga real; la transcripción real la verifica el usuario.
+- Actualizaciones (FR-015, P11, T016): `core/updates.py` (versiones, errores, puertos), `adapters/network_policy.py` (política de red compartida con ffmpeg; ahora admite también `api.github.com`), `adapters/github_releases.py` y `app/updater.py` (`UpdateService`). Decisiones que el SDD no cubría:
+  - **Versiones:** comparador SemVer 2.0.0 propio en `core` (el plan decía `packaging` en `app`, pero las reglas de capas lo impiden): numéricos como números, `+build` ignorado, prefijo `v` aceptado. Un tag ininterpretable nunca lanza: si es el único candidato, error traducido; si hay otros válidos, se ignora.
+  - **Preliminares:** se consulta `GET /releases?per_page=10`; solo cuentan si la versión instalada es preliminar (T028 se prueba con betas marcadas como *pre-release*). Un tag con sufijo (`-beta.1`) cuenta como preliminar aunque no esté marcado; los borradores se ignoran.
+  - **Registro de la consulta:** `last_update_check` se guarda cuando el servidor respondió (incluidos 403/429 y 5xx) y no si no se pudo conectar. Máximo un intento por arranque. `check(manual=True)` (T022, «Buscar ahora») ignora el interruptor, las 24 h y el límite por arranque. Una marca del futuro o ilegible no bloquea.
+  - **Límites:** JSON ≤ 1 MiB, `.sha256` ≤ 4 KiB, instalador ≤ 300 MiB y exactamente el `size` que anuncia la API (se aborta al pasarse y se compara al terminar), más SHA-256. Límite de uso de GitHub (403/429) = error `RATE_LIMIT` con mensaje claro. Un `.sha256` con el nombre de otro archivo se rechaza.
+  - **Descarga:** a `%LOCALAPPDATA%\FT Markdown\updates\` (`updates_dir()`); cada descarga borra primero lo anterior. `UpdateService.purge()` queda disponible para limpiar al arrancar.
+  - **Nombres de assets:** constantes `INSTALLER_NAME_TEMPLATE` y `CHECKSUM_NAME_TEMPLATE`; una prueba las contrasta con `OutputBaseFilename` de `packaging/installer.iss`.
+  - **Pruebas:** todas con doble de la fuente o del *opener*; `-m network` consulta la API real (una lista, o `RATE_LIMIT`).
+  - **(a) Lanzar el instalador** no está en T016: irá en un adaptador con puerto en `core`, a cargo de **T023**, no en la interfaz. Debe esperar a que la cola esté vacía y llamar a `shutdown()` antes de cerrar.
+  - **(b) Limitación del SHA-256:** prueba integridad, no autenticidad. Quien controle la release puede cambiar instalador y hash a la vez; hasta tener firma de código (plan §6) no hay garantía de origen.
+  - **(c) T022** documenta `api.github.com` en el panel de privacidad y ofrece «Buscar actualizaciones».
+  - **Decisión del autor (comprobación de actualizaciones):** activada por defecto, sin aviso en el primer arranque, con interruptor en ajustes. **T022 debe:** etiquetar el interruptor «Buscar actualizaciones al abrir la app, una vez al día, conectando a GitHub»; mostrar «Última comprobación» (`last_update_check`); ofrecer el botón «Buscar ahora» (`check(manual=True)`); y listar en el panel de privacidad `api.github.com`, `github.com` y `*.githubusercontent.com` (descarga) y las direcciones de la sonda de red (`1.1.1.1`, `8.8.8.8`). Interpretación de P11 registrada en la constitución v0.2.1.
+  - **Plan §1 y §4 corregidos:** comparador propio y `GET /releases`.
 - `requires-python` pasa a `>=3.12,<3.14`, coherente con el entorno de compilación.
 
 ## Fuera de esta lista (fase 2 del producto)

@@ -1,6 +1,6 @@
 # Fase 0 — Constitución del proyecto
 
-**Versión:** 0.2 · **Fecha:** 2026-10-01 · **Estado:** aprobada
+**Versión:** 0.2.1 · **Fecha:** 2026-10-01 · **Estado:** aprobada
 
 ## ¿Qué es este paso?
 
@@ -40,3 +40,4 @@ Un cambio a esta constitución se registra con fecha, motivo y versión nueva al
 
 - 0.1 (2026-10-01): borrador inicial.
 - 0.2 (2026-10-01): se agregan P11 y P12 tras decidir la distribución pública gratuita con instalador y actualizaciones.
+- 0.2.1 (2026-10-01): aclaración de P11, sin cambiar ningún principio: «motivo visible» significa que la conexión está descrita en el panel de privacidad y se puede desactivar en ajustes. Motivo: decisión del autor sobre la comprobación de actualizaciones (activada por defecto, sin aviso en el primer arranque, con interruptor en ajustes).
